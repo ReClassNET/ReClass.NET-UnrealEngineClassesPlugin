@@ -15,6 +15,14 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 		public override bool PerformCycleCheck => false;
 
+		public override void Intialize()
+		{
+			var node = ClassNode.Create();
+			node.Intialize();
+			node.AddBytes(64);
+			InnerNode = node;
+		}
+
 		public override Size Draw(ViewInfo view, int x, int y)
 		{
 			if (IsHidden)

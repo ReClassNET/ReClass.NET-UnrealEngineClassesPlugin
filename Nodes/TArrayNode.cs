@@ -14,6 +14,14 @@ namespace UnrealEngineClassesPlugin.Nodes
 		public override int MemorySize => IntPtr.Size + sizeof(int) * 2;
 		public override bool PerformCycleCheck => false;
 
+		public override void Intialize()
+		{
+			var node = ClassNode.Create();
+			node.Intialize();
+			node.AddBytes(64);
+			InnerNode = node;
+		}
+
 		public override Size Draw(ViewInfo view, int x, int y)
 		{
 			Count = view.Memory.ReadInt32(Offset + IntPtr.Size);
