@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Drawing;
 using ReClassNET.Plugins;
+using UnrealEngineClassesPlugin.Nodes;
 
 namespace UnrealEngineClassesPlugin
 {
-	public class UnrealPluginExt : Plugin
+	public class UnrealEngineClassesPluginExt : Plugin
 	{
 		private IPluginHost host;
+
+		private readonly NodeConverter converter = new NodeConverter();
+		private readonly CodeGenerator generator = new CodeGenerator();
 
 		public override Image Icon => Properties.Resources.B16x16_Icon;
 
@@ -21,7 +25,7 @@ namespace UnrealEngineClassesPlugin
 
 			this.host = host ?? throw new ArgumentNullException(nameof(host));
 
-			
+			host.RegisterNodeType(typeof(TArrayNode), "TArray", Icon, converter, generator);
 
 			return true;
 		}
