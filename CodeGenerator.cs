@@ -6,19 +6,10 @@ using UnrealEngineClassesPlugin.Nodes;
 
 namespace UnrealEngineClassesPlugin
 {
-	public class CodeGenerator : ICustomCodeGenerator
+	public class CodeGenerator : ICustomCppCodeGenerator
 	{
-		/// <summary>Checks if the language is C++ and the node is a WeakPtrNode.</summary>
-		/// <param name="node">The node to check.</param>
-		/// <param name="language">The language to check.</param>
-		/// <returns>True if we can generate code, false if not.</returns>
-		public bool CanGenerateCode(BaseNode node, Language language)
+		public bool CanHandle(BaseNode node)
 		{
-			if (language != Language.Cpp)
-			{
-				return false;
-			}
-
 			switch (node)
 			{
 				case FDateTimeNode _:
@@ -33,29 +24,30 @@ namespace UnrealEngineClassesPlugin
 			return false;
 		}
 
-		/// <summary>Gets the member definition of the node.</summary>
-		/// <param name="node">The member node.</param>
-		/// <param name="language">The language to generate.</param>
-		/// <returns>The member definition of the node.</returns>
-		public MemberDefinition GetMemberDefinition(BaseNode node, Language language, ILogger logger)
+		public string GetTypeDefinition(BaseNode node, GetTypeDefinitionFunc defaultGetTypeDefinitionFunc, ResolveWrappedTypeFunc defaultResolveWrappedTypeFunc, ILogger logger)
 		{
 			switch (node)
 			{
 				case FDateTimeNode _:
-					return new MemberDefinition(node, "FDateTime");
+					return "FDateTime";
 				case FGuidNode _:
-					return new MemberDefinition(node, "FGuid");
+					return "FGuid";
 				case FQWordNode _:
-					return new MemberDefinition(node, "FQWord");
+					return "FQWord";
 				case FStringNode _:
-					return new MemberDefinition(node, "FString");
+					return "FString";
 				case TArrayNode arrayNode:
-					return new MemberDefinition(node, $"TArray<{arrayNode.InnerNode.Name}>");
+					return $"TArray<{defaultResolveWrappedTypeFunc(arrayNode.InnerNode, true, logger)}>";
 				case TSharedPtrNode sharedPtrNode:
-					return new MemberDefinition(node, $"TSharedPtr<{sharedPtrNode.InnerNode.Name}>");
+					return $"TSharedPtr<{defaultResolveWrappedTypeFunc(sharedPtrNode.InnerNode, true, logger)}>";
 			}
 
 			throw new InvalidOperationException("Can not handle node: " + node.GetType());
+		}
+
+		public BaseNode TransformNode(BaseNode node)
+		{
+			return node;
 		}
 	}
 }

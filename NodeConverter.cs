@@ -9,7 +9,7 @@ using UnrealEngineClassesPlugin.Nodes;
 
 namespace UnrealEngineClassesPlugin
 {
-	public class NodeConverter : ICustomNodeConverter
+	public class NodeConverter : ICustomNodeSerializer
 	{
 		/// <summary>Name of the type used in the XML data.</summary>
 		private const string XmlTypePrefix = "UnrealEngineClasses.";
@@ -18,7 +18,7 @@ namespace UnrealEngineClassesPlugin
 
 		public bool CanHandleElement(XElement element) => element.Attribute(ReClassNetFile.XmlTypeAttribute)?.Value.StartsWith(XmlTypePrefix) == true;
 
-		public bool TryCreateNodeFromElement(XElement element, ClassNode parent, IEnumerable<ClassNode> classes, ILogger logger, out BaseNode node)
+		public bool TryCreateNodeFromElement(XElement element, BaseNode parent, IEnumerable<ClassNode> classes, ILogger logger, CreateNodeFromElementHandler defaultHandler, out BaseNode node)
 		{
 			node = null;
 
@@ -40,16 +40,6 @@ namespace UnrealEngineClassesPlugin
 				case XmlTypePrefix + "TArray":
 				case XmlTypePrefix + "TSharedPtr":
 				{
-					var reference = NodeUuid.FromBase64String(element.Attribute(ReClassNetFile.XmlReferenceAttribute)?.Value, false);
-					var innerClass = classes.FirstOrDefault(c => c.Uuid.Equals(reference));
-					if (innerClass == null)
-					{
-						logger.Log(LogLevel.Warning, $"Skipping node with unknown reference: {reference}");
-						logger.Log(LogLevel.Warning, element.ToString());
-
-						return false;
-					}
-
 					if (type == XmlTypePrefix + "TArray")
 					{
 						node = new TArrayNode();
@@ -58,7 +48,33 @@ namespace UnrealEngineClassesPlugin
 					{
 						node = new TSharedPtrNode();
 					}
-					((BaseReferenceNode)node).ChangeInnerNode(innerClass);
+
+					BaseNode innerNode = null;
+					var innerElement = element.Elements().FirstOrDefault();
+					if (innerElement != null)
+					{
+						innerNode = defaultHandler(innerElement, node, logger);
+					}
+
+					var wrapperNode = (BaseWrapperNode)node;
+					if (wrapperNode.CanChangeInnerNodeTo(innerNode))
+					{
+						var rootWrapperNode = node.GetRootWrapperNode();
+						if (rootWrapperNode.ShouldPerformCycleCheckForInnerNode()
+							&& innerNode is ClassNode classNode
+							&& ClassUtil.IsCyclicIfClassIsAccessibleFromParent(node.GetParentClass(), classNode, classes))
+						{
+							logger.Log(LogLevel.Error, $"Skipping node with cyclic class reference: {node.GetParentClass().Name}->{rootWrapperNode.Name}");
+
+							return false;
+						}
+
+						wrapperNode.ChangeInnerNode(innerNode);
+					}
+					else
+					{
+						return false;
+					}
 
 					break;
 				}
@@ -72,7 +88,7 @@ namespace UnrealEngineClassesPlugin
 			return true;
 		}
 
-		public XElement CreateElementFromNode(BaseNode node, ILogger logger)
+		public XElement CreateElementFromNode(BaseNode node, ILogger logger, CreateElementFromNodeHandler defaultHandler)
 		{
 			var element = new XElement(
 				ReClassNetFile.XmlNodeElement,
@@ -94,14 +110,17 @@ namespace UnrealEngineClassesPlugin
 				case FStringNode _:
 					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "FString");
 					break;
-				case TArrayNode arrayNode:
+				case TArrayNode _:
 					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "TArray");
-					element.SetAttributeValue(ReClassNetFile.XmlReferenceAttribute, arrayNode.InnerNode.Uuid.ToBase64String());
 					break;
-				case TSharedPtrNode sharedPtrNode:
+				case TSharedPtrNode _:
 					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "TSharedPtr");
-					element.SetAttributeValue(ReClassNetFile.XmlReferenceAttribute, sharedPtrNode.InnerNode.Uuid.ToBase64String());
 					break;
+			}
+
+			if (node is BaseWrapperNode wrapperNode)
+			{
+				element.Add(defaultHandler(wrapperNode.InnerNode, logger));
 			}
 
 			return element;

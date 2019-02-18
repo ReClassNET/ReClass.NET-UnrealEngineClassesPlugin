@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using ReClassNET.Plugins;
 using UnrealEngineClassesPlugin.Nodes;
 
@@ -7,32 +6,16 @@ namespace UnrealEngineClassesPlugin
 {
 	public class UnrealEngineClassesPluginExt : Plugin
 	{
-		private IPluginHost host;
-
-		private readonly NodeConverter converter = new NodeConverter();
-		private readonly CodeGenerator generator = new CodeGenerator();
-
 		public override Image Icon => Properties.Resources.B16x16_Icon;
 
-		public override bool Initialize(IPluginHost host)
+		public override CustomNodeTypes GetCustomNodeTypes()
 		{
-			System.Diagnostics.Debugger.Launch();
-
-			if (this.host != null)
+			return new CustomNodeTypes
 			{
-				Terminate();
-			}
-
-			this.host = host ?? throw new ArgumentNullException(nameof(host));
-
-			host.RegisterNodeType(typeof(TArrayNode), "TArray", Icon, converter, generator);
-
-			return true;
-		}
-
-		public override void Terminate()
-		{
-			
+				CodeGenerator = new CodeGenerator(),
+				Serializer = new NodeConverter(),
+				NodeTypes = new[] { typeof(TArrayNode), typeof(TSharedPtrNode), typeof(FStringNode), typeof(FQWordNode), typeof(FGuidNode), typeof(FDateTimeNode) }
+			};
 		}
 	}
 }

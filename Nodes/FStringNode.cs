@@ -10,9 +10,15 @@ namespace UnrealEngineClassesPlugin.Nodes
 	{
 		public override int MemorySize => IntPtr.Size + sizeof(int) * 2;
 
+		public override void GetUserInterfaceInfo(out string name, out Image icon)
+		{
+			name = "FString";
+			icon = null;
+		}
+
 		public override Size Draw(ViewInfo view, int x, int y)
 		{
-			if (IsHidden)
+			if (IsHidden && !IsWrapped)
 			{
 				return DrawHidden(view, x, y);
 			}
@@ -48,7 +54,7 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 		public override int CalculateDrawnHeight(ViewInfo view)
 		{
-			return IsHidden ? HiddenHeight : view.Font.Height;
+			return IsHidden && !IsWrapped ? HiddenHeight : view.Font.Height;
 		}
 	}
 }

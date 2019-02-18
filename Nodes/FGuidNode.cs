@@ -8,6 +8,12 @@ namespace UnrealEngineClassesPlugin.Nodes
 	{
 		public override int MemorySize => sizeof(int) * 4;
 
+		public override void GetUserInterfaceInfo(out string name, out Image icon)
+		{
+			name = "FGuid";
+			icon = null;
+		}
+
 		public override Size Draw(ViewInfo view, int x, int y)
 		{
 			if (IsHidden)

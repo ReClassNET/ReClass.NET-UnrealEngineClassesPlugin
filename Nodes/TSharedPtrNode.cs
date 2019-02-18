@@ -7,25 +7,35 @@ using ReClassNET.UI;
 
 namespace UnrealEngineClassesPlugin.Nodes
 {
-	public class TSharedPtrNode : BaseReferenceNode
+	public class TSharedPtrNode : BaseWrapperNode
 	{
 		private readonly MemoryBuffer memory = new MemoryBuffer();
 
 		public override int MemorySize => IntPtr.Size * 2;
 
-		public override bool PerformCycleCheck => false;
+		protected override bool PerformCycleCheck => false;
 
-		public override void Intialize()
+		public override void GetUserInterfaceInfo(out string name, out Image icon)
 		{
-			var node = ClassNode.Create();
-			node.Intialize();
-			node.AddBytes(64);
-			InnerNode = node;
+			name = "TSharedPtr";
+			icon = null;
+		}
+
+		public override bool CanChangeInnerNodeTo(BaseNode node)
+		{
+			switch (node)
+			{
+				case ClassNode _:
+				case VirtualMethodNode _:
+					return false;
+			}
+
+			return true;
 		}
 
 		public override Size Draw(ViewInfo view, int x, int y)
 		{
-			if (IsHidden)
+			if (IsHidden && !IsWrapped)
 			{
 				return DrawHidden(view, x, y);
 			}
@@ -37,16 +47,29 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			AddSelection(view, x, y, view.Font.Height);
 
-			x = AddOpenClose(view, x, y);
+			if (InnerNode != null)
+			{
+				x = AddOpenClose(view, x, y);
+			}
+			else
+			{
+				x += TextPadding;
+			}
 			x = AddIcon(view, x, y, Icons.Pointer, -1, HotSpotType.None);
 
 			var tx = x;
 			x = AddAddressOffset(view, x, y);
 
 			x = AddText(view, x, y, view.Settings.TypeColor, HotSpot.NoneId, "TSharedPtr") + view.Font.Width;
-			x = AddText(view, x, y, view.Settings.NameColor, HotSpot.NameId, Name) + view.Font.Width;
-			x = AddText(view, x, y, view.Settings.ValueColor, HotSpot.NoneId, $"<{InnerNode.Name}>") + view.Font.Width;
-			x = AddIcon(view, x, y, Icons.Change, 4, HotSpotType.ChangeType) + view.Font.Width;
+			if (!IsWrapped)
+			{
+				x = AddText(view, x, y, view.Settings.NameColor, HotSpot.NameId, Name) + view.Font.Width;
+			}
+			if (InnerNode == null)
+			{
+				x = AddText(view, x, y, view.Settings.ValueColor, HotSpot.NoneId, "<void>") + view.Font.Width;
+			}
+			x = AddIcon(view, x, y, Icons.Change, 4, HotSpotType.ChangeWrappedType) + view.Font.Width;
 
 			var ptr = view.Memory.ReadIntPtr(Offset);
 
@@ -55,6 +78,7 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			x = AddComment(view, x, y);
 
+			DrawInvalidMemoryIndicator(view, y);
 			AddTypeDrop(view, y);
 			AddDelete(view, y);
 
@@ -62,7 +86,7 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			var size = new Size(x - origX, y - origY);
 
-			if (levelsOpen[view.Level])
+			if (LevelsOpen[view.Level] && InnerNode != null)
 			{
 				memory.Size = InnerNode.MemorySize;
 				memory.Process = view.Memory.Process;
@@ -83,13 +107,13 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 		public override int CalculateDrawnHeight(ViewInfo view)
 		{
-			if (IsHidden)
+			if (IsHidden && !IsWrapped)
 			{
 				return HiddenHeight;
 			}
 
 			var height = view.Font.Height;
-			if (levelsOpen[view.Level])
+			if (LevelsOpen[view.Level] && InnerNode != null)
 			{
 				height += InnerNode.CalculateDrawnHeight(view);
 			}

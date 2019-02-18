@@ -10,6 +10,12 @@ namespace UnrealEngineClassesPlugin.Nodes
 	{
 		public override int MemorySize => sizeof(long);
 
+		public override void GetUserInterfaceInfo(out string name, out Image icon)
+		{
+			name = "FDateTime";
+			icon = null;
+		}
+
 		public override Size Draw(ViewInfo view, int x, int y)
 		{
 			if (IsHidden)
