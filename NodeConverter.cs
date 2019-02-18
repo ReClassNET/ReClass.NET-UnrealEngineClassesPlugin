@@ -14,78 +14,32 @@ namespace UnrealEngineClassesPlugin
 		/// <summary>Name of the type used in the XML data.</summary>
 		private const string XmlTypePrefix = "UnrealEngineClasses.";
 
+		private static readonly Dictionary<string, Type> stringToTypeMap = new[]
+		{
+			typeof(FDateTimeNode),
+			typeof(FGuidNode),
+			typeof(FQWordNode),
+			typeof(TArrayNode),
+			typeof(TSharedPtrNode)
+		}.ToDictionary(t => XmlTypePrefix + t.Name, t => t);
+
+		private static readonly Dictionary<Type, string> typeToStringMap = stringToTypeMap.ToDictionary(kv => kv.Value, kv => kv.Key);
+
 		public bool CanHandleNode(BaseNode node) => node is FDateTimeNode || node is FGuidNode || node is FQWordNode || node is FStringNode || node is TArrayNode || node is TSharedPtrNode;
 
 		public bool CanHandleElement(XElement element) => element.Attribute(ReClassNetFile.XmlTypeAttribute)?.Value.StartsWith(XmlTypePrefix) == true;
 
-		public bool TryCreateNodeFromElement(XElement element, BaseNode parent, IEnumerable<ClassNode> classes, ILogger logger, CreateNodeFromElementHandler defaultHandler, out BaseNode node)
+		public BaseNode CreateNodeFromElement(XElement element, BaseNode parent, IEnumerable<ClassNode> classes, ILogger logger, CreateNodeFromElementHandler createNodeFromElement)
 		{
-			node = null;
-
-			var type = element.Attribute(ReClassNetFile.XmlTypeAttribute)?.Value;
-			switch (type)
+			if (!stringToTypeMap.TryGetValue(element.Attribute(ReClassNetFile.XmlTypeAttribute)?.Value ?? string.Empty, out var nodeType))
 			{
-				case XmlTypePrefix + "FDateTime":
-					node = new FDateTimeNode();
-					break;
-				case XmlTypePrefix + "FGuid":
-					node = new FGuidNode();
-					break;
-				case XmlTypePrefix + "FQWord":
-					node = new FQWordNode();
-					break;
-				case XmlTypePrefix + "FString":
-					node = new FStringNode();
-					break;
-				case XmlTypePrefix + "TArray":
-				case XmlTypePrefix + "TSharedPtr":
-				{
-					if (type == XmlTypePrefix + "TArray")
-					{
-						node = new TArrayNode();
-					}
-					else
-					{
-						node = new TSharedPtrNode();
-					}
+				logger.Log(LogLevel.Error, $"Skipping node with unknown type: {element.Attribute(ReClassNetFile.XmlTypeAttribute)?.Value}");
+				logger.Log(LogLevel.Warning, element.ToString());
 
-					BaseNode innerNode = null;
-					var innerElement = element.Elements().FirstOrDefault();
-					if (innerElement != null)
-					{
-						innerNode = defaultHandler(innerElement, node, logger);
-					}
-
-					var wrapperNode = (BaseWrapperNode)node;
-					if (wrapperNode.CanChangeInnerNodeTo(innerNode))
-					{
-						var rootWrapperNode = node.GetRootWrapperNode();
-						if (rootWrapperNode.ShouldPerformCycleCheckForInnerNode()
-							&& innerNode is ClassNode classNode
-							&& ClassUtil.IsCyclicIfClassIsAccessibleFromParent(node.GetParentClass(), classNode, classes))
-						{
-							logger.Log(LogLevel.Error, $"Skipping node with cyclic class reference: {node.GetParentClass().Name}->{rootWrapperNode.Name}");
-
-							return false;
-						}
-
-						wrapperNode.ChangeInnerNode(innerNode);
-					}
-					else
-					{
-						return false;
-					}
-
-					break;
-				}
-				default:
-					throw new InvalidOperationException("Can not handle node type: " + type);
+				return null;
 			}
 
-			node.Name = element.Attribute(ReClassNetFile.XmlNameAttribute)?.Value ?? string.Empty;
-			node.Comment = element.Attribute(ReClassNetFile.XmlCommentAttribute)?.Value ?? string.Empty;
-
-			return true;
+			return BaseNode.CreateInstanceFromType(nodeType, false);
 		}
 
 		public XElement CreateElementFromNode(BaseNode node, ILogger logger, CreateElementFromNodeHandler defaultHandler)
