@@ -44,40 +44,10 @@ namespace UnrealEngineClassesPlugin
 
 		public XElement CreateElementFromNode(BaseNode node, ILogger logger, CreateElementFromNodeHandler defaultHandler)
 		{
-			var element = new XElement(
+			return new XElement(
 				ReClassNetFile.XmlNodeElement,
-				new XAttribute(ReClassNetFile.XmlNameAttribute, node.Name ?? string.Empty),
-				new XAttribute(ReClassNetFile.XmlCommentAttribute, node.Comment ?? string.Empty)
+				new XAttribute(ReClassNetFile.XmlTypeAttribute, typeToStringMap[node.GetType()])
 			);
-
-			switch (node)
-			{
-				case FDateTimeNode _:
-					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "FDateTime");
-					break;
-				case FGuidNode _:
-					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "FGuid");
-					break;
-				case FQWordNode _:
-					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "FQWord");
-					break;
-				case FStringNode _:
-					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "FString");
-					break;
-				case TArrayNode _:
-					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "TArray");
-					break;
-				case TSharedPtrNode _:
-					element.SetAttributeValue(ReClassNetFile.XmlTypeAttribute, XmlTypePrefix + "TSharedPtr");
-					break;
-			}
-
-			if (node is BaseWrapperNode wrapperNode)
-			{
-				element.Add(defaultHandler(wrapperNode.InnerNode, logger));
-			}
-
-			return element;
 		}
 	}
 }
