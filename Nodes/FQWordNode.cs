@@ -21,8 +21,6 @@ namespace UnrealEngineClassesPlugin.Nodes
 				return DrawHidden(view, x, y);
 			}
 
-			DrawInvalidMemoryIndicator(view, y);
-
 			var origX = x;
 
 			AddSelection(view, x, y, view.Font.Height);
@@ -43,8 +41,9 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			x = AddComment(view, x, y);
 
-			AddTypeDrop(view, y);
-			AddDelete(view, y);
+			DrawInvalidMemoryIndicatorIcon(view, y);
+			AddContextDropDownIcon(view, y);
+			AddDeleteIcon(view, y);
 
 			return new Size(x - origX, view.Font.Height);
 		}

@@ -40,8 +40,6 @@ namespace UnrealEngineClassesPlugin.Nodes
 				return DrawHidden(view, x, y);
 			}
 
-			DrawInvalidMemoryIndicator(view, y);
-
 			var origX = x;
 			var origY = y;
 
@@ -49,7 +47,7 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			if (InnerNode != null)
 			{
-				x = AddOpenClose(view, x, y);
+				x = AddOpenCloseIcon(view, x, y);
 			}
 			else
 			{
@@ -78,9 +76,9 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			x = AddComment(view, x, y);
 
-			DrawInvalidMemoryIndicator(view, y);
-			AddTypeDrop(view, y);
-			AddDelete(view, y);
+			DrawInvalidMemoryIndicatorIcon(view, y);
+			AddContextDropDownIcon(view, y);
+			AddDeleteIcon(view, y);
 
 			y += view.Font.Height;
 

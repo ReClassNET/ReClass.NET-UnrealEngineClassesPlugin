@@ -6,9 +6,9 @@ using UnrealEngineClassesPlugin.Nodes;
 
 namespace UnrealEngineClassesPlugin
 {
-	public class CodeGenerator : ICustomCppCodeGenerator
+	public class CodeGenerator : CustomCppCodeGenerator
 	{
-		public bool CanHandle(BaseNode node)
+		public override bool CanHandle(BaseNode node)
 		{
 			switch (node)
 			{
@@ -24,7 +24,7 @@ namespace UnrealEngineClassesPlugin
 			return false;
 		}
 
-		public string GetTypeDefinition(BaseNode node, GetTypeDefinitionFunc defaultGetTypeDefinitionFunc, ResolveWrappedTypeFunc defaultResolveWrappedTypeFunc, ILogger logger)
+		public override string GetTypeDefinition(BaseNode node, GetTypeDefinitionFunc defaultGetTypeDefinitionFunc, ResolveWrappedTypeFunc defaultResolveWrappedTypeFunc, ILogger logger)
 		{
 			switch (node)
 			{
@@ -43,11 +43,6 @@ namespace UnrealEngineClassesPlugin
 			}
 
 			throw new InvalidOperationException("Can not handle node: " + node.GetType());
-		}
-
-		public BaseNode TransformNode(BaseNode node)
-		{
-			return node;
 		}
 	}
 }
