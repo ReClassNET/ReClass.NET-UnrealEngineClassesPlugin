@@ -25,7 +25,7 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			var ptr = view.Memory.ReadIntPtr(Offset);
 			var length = view.Memory.ReadInt32(Offset + IntPtr.Size);
-			var text = view.Memory.Process.ReadRemoteString(Encoding.Unicode, ptr, length);
+			var text = view.Process.ReadRemoteString(Encoding.Unicode, ptr, length);
 
 			var origX = x;
 

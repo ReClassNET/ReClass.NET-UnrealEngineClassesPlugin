@@ -87,8 +87,7 @@ namespace UnrealEngineClassesPlugin.Nodes
 			if (LevelsOpen[view.Level] && InnerNode != null)
 			{
 				memory.Size = InnerNode.MemorySize;
-				memory.Process = view.Memory.Process;
-				memory.Update(ptr);
+				memory.UpdateFrom(view.Process, ptr);
 
 				var v = view.Clone();
 				v.Address = ptr;

@@ -28,7 +28,8 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 		public override void Initialize()
 		{
-			InnerNode = IntPtr.Size == 4 ? (BaseNode)new Hex32Node() : new Hex64Node();
+			var node = IntPtr.Size == 4 ? (BaseNode)new Hex32Node() : new Hex64Node();
+			ChangeInnerNode(node);
 		}
 
 		public override Size Draw(ViewInfo view, int x, int y)
@@ -43,12 +44,11 @@ namespace UnrealEngineClassesPlugin.Nodes
 			var ptr = view.Memory.ReadIntPtr(Offset);
 			if (!ptr.IsNull())
 			{
-				ptr = view.Memory.Process.ReadRemoteIntPtr(ptr + CurrentIndex * IntPtr.Size);
+				ptr = view.Process.ReadRemoteIntPtr(ptr + CurrentIndex * IntPtr.Size);
 			}
 
 			memory.Size = InnerNode.MemorySize;
-			memory.Process = view.Memory.Process;
-			memory.Update(ptr);
+			memory.UpdateFrom(view.Process, ptr);
 
 			var v = view.Clone();
 			v.Address = ptr;
