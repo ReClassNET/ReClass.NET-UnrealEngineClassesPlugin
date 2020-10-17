@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Text;
+using ReClassNET.Controls;
 using ReClassNET.Nodes;
 using ReClassNET.UI;
 
@@ -16,44 +17,45 @@ namespace UnrealEngineClassesPlugin.Nodes
 			icon = null;
 		}
 
-		public override Size Draw(ViewInfo view, int x, int y)
+		public override Size Draw(DrawContext context, int x, int y)
 		{
 			if (IsHidden && !IsWrapped)
 			{
-				return DrawHidden(view, x, y);
+				return DrawHidden(context, x, y);
 			}
 
-			var ptr = view.Memory.ReadIntPtr(Offset);
-			var length = view.Memory.ReadInt32(Offset + IntPtr.Size);
-			var text = view.Process.ReadRemoteString(Encoding.Unicode, ptr, length);
+			var ptr = context.Memory.ReadIntPtr(Offset);
+			var length = context.Memory.ReadInt32(Offset + IntPtr.Size);
+			var text = context.Process.ReadRemoteString(Encoding.Unicode, ptr, length);
 
 			var origX = x;
 
-			AddSelection(view, x, y, view.Font.Height);
+			AddSelection(context, x, y, context.Font.Height);
 
-			x += TextPadding;
-			x = AddIcon(view, x, y, Icons.Text, HotSpot.NoneId, HotSpotType.None);
-			x = AddAddressOffset(view, x, y);
+			x = AddIconPadding(context, x);
+			x = AddIcon(context, x, y, context.IconProvider.Text, HotSpot.NoneId, HotSpotType.None);
 
-			x = AddText(view, x, y, view.Settings.TypeColor, HotSpot.NoneId, "FString") + view.Font.Width;
-			x = AddText(view, x, y, view.Settings.NameColor, HotSpot.NameId, Name) + view.Font.Width;
+			x = AddAddressOffset(context, x, y);
 
-			x = AddText(view, x, y, view.Settings.TextColor, HotSpot.NoneId, "= '");
-			x = AddText(view, x, y, view.Settings.TextColor, HotSpot.NoneId, text);
-			x = AddText(view, x, y, view.Settings.TextColor, HotSpot.NoneId, "'") + view.Font.Width;
+			x = AddText(context, x, y, context.Settings.TypeColor, HotSpot.NoneId, "FString") + context.Font.Width;
+			x = AddText(context, x, y, context.Settings.NameColor, HotSpot.NameId, Name) + context.Font.Width;
 
-			x = AddComment(view, x, y);
+			x = AddText(context, x, y, context.Settings.TextColor, HotSpot.NoneId, "= '");
+			x = AddText(context, x, y, context.Settings.TextColor, HotSpot.ReadOnlyId, text);
+			x = AddText(context, x, y, context.Settings.TextColor, HotSpot.NoneId, "'") + context.Font.Width;
 
-			DrawInvalidMemoryIndicatorIcon(view, y);
-			AddContextDropDownIcon(view, y);
-			AddDeleteIcon(view, y);
+			x = AddComment(context, x, y);
 
-			return new Size(x - origX, view.Font.Height);
+			DrawInvalidMemoryIndicatorIcon(context, y);
+			AddContextDropDownIcon(context, y);
+			AddDeleteIcon(context, y);
+
+			return new Size(x - origX, context.Font.Height);
 		}
 
-		public override int CalculateDrawnHeight(ViewInfo view)
+		public override int CalculateDrawnHeight(DrawContext context)
 		{
-			return IsHidden && !IsWrapped ? HiddenHeight : view.Font.Height;
+			return IsHidden && !IsWrapped ? HiddenHeight : context.Font.Height;
 		}
 	}
 }

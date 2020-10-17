@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using ReClassNET.Controls;
 using ReClassNET.Extensions;
 using ReClassNET.Memory;
 using ReClassNET.Nodes;
-using ReClassNET.UI;
 
 namespace UnrealEngineClassesPlugin.Nodes
 {
@@ -32,29 +32,29 @@ namespace UnrealEngineClassesPlugin.Nodes
 			ChangeInnerNode(node);
 		}
 
-		public override Size Draw(ViewInfo view, int x, int y)
+		public override Size Draw(DrawContext context, int x, int y)
 		{
-			Count = view.Memory.ReadInt32(Offset + IntPtr.Size);
+			Count = context.Memory.ReadInt32(Offset + IntPtr.Size);
 
-			return Draw(view, x, y, "TArray");
+			return Draw(context, x, y, "TArray");
 		}
 
-		protected override Size DrawChild(ViewInfo view, int x, int y)
+		protected override Size DrawChild(DrawContext context, int x, int y)
 		{
-			var ptr = view.Memory.ReadIntPtr(Offset);
+			var ptr = context.Memory.ReadIntPtr(Offset);
 			if (!ptr.IsNull())
 			{
-				ptr = view.Process.ReadRemoteIntPtr(ptr + CurrentIndex * IntPtr.Size);
+				ptr = context.Process.ReadRemoteIntPtr(ptr + CurrentIndex * IntPtr.Size);
 			}
 
 			memory.Size = InnerNode.MemorySize;
-			memory.UpdateFrom(view.Process, ptr);
+			memory.UpdateFrom(context.Process, ptr);
 
-			var v = view.Clone();
-			v.Address = ptr;
-			v.Memory = memory;
+			var innerContext = context.Clone();
+			innerContext.Address = ptr;
+			innerContext.Memory = memory;
 
-			return InnerNode.Draw(v, x, y);
+			return InnerNode.Draw(innerContext, x, y);
 		}
 	}
 }

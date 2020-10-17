@@ -25,7 +25,17 @@ namespace UnrealEngineClassesPlugin
 
 		private static readonly Dictionary<Type, string> typeToStringMap = stringToTypeMap.ToDictionary(kv => kv.Value, kv => kv.Key);
 
-		public bool CanHandleNode(BaseNode node) => node is FDateTimeNode || node is FGuidNode || node is FQWordNode || node is FStringNode || node is TArrayNode || node is TSharedPtrNode;
+		public bool CanHandleNode(BaseNode node) =>
+			node switch
+			{
+				FDateTimeNode _ => true,
+				FGuidNode _ => true,
+				FQWordNode _ => true,
+				FStringNode _ => true,
+				TArrayNode _ => true,
+				TSharedPtrNode _ => true,
+				_ => false
+			};
 
 		public bool CanHandleElement(XElement element) => element.Attribute(ReClassNetFile.XmlTypeAttribute)?.Value.StartsWith(XmlTypePrefix) == true;
 
