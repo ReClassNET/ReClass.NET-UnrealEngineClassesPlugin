@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using ReClassNET.Controls;
 using ReClassNET.Nodes;
 using ReClassNET.UI;
 
@@ -14,44 +15,45 @@ namespace UnrealEngineClassesPlugin.Nodes
 			icon = null;
 		}
 
-		public override Size Draw(ViewInfo view, int x, int y)
+		public override Size Draw(DrawContext context, int x, int y)
 		{
 			if (IsHidden)
 			{
-				return DrawHidden(view, x, y);
+				return DrawHidden(context, x, y);
 			}
 
-			var a = view.Memory.ReadUInt32(Offset);
-			var b = view.Memory.ReadUInt32(Offset + 4);
-			var c = view.Memory.ReadUInt32(Offset + 8);
-			var d = view.Memory.ReadUInt32(Offset + 12);
+			var a = context.Memory.ReadUInt32(Offset);
+			var b = context.Memory.ReadUInt32(Offset + 4);
+			var c = context.Memory.ReadUInt32(Offset + 8);
+			var d = context.Memory.ReadUInt32(Offset + 12);
 
 			var origX = x;
 
-			AddSelection(view, x, y, view.Font.Height);
+			AddSelection(context, x, y, context.Font.Height);
 
-			x += TextPadding;
-			x = AddIcon(view, x, y, Icons.Text, HotSpot.NoneId, HotSpotType.None);
-			x = AddAddressOffset(view, x, y);
+			x = AddIconPadding(context, x);
+			x = AddIcon(context, x, y, context.IconProvider.Text, HotSpot.NoneId, HotSpotType.None);
 
-			x = AddText(view, x, y, view.Settings.TypeColor, HotSpot.NoneId, "FGuid") + view.Font.Width;
-			x = AddText(view, x, y, view.Settings.NameColor, HotSpot.NameId, Name) + view.Font.Width;
+			x = AddAddressOffset(context, x, y);
 
-			x = AddText(view, x, y, view.Settings.TextColor, HotSpot.NoneId, "=") + view.Font.Width;
-			x = AddText(view, x, y, view.Settings.TextColor, HotSpot.NoneId, $"{{ {a:08X}-{b >> 16:04X}-{b & 0xFFFF:04X}-{c >> 16:04X}-{c & 0xFFFF:04X}{d:08X} }}") + view.Font.Width;
+			x = AddText(context, x, y, context.Settings.TypeColor, HotSpot.NoneId, "FGuid") + context.Font.Width;
+			x = AddText(context, x, y, context.Settings.NameColor, HotSpot.NameId, Name) + context.Font.Width;
 
-			x = AddComment(view, x, y);
+			x = AddText(context, x, y, context.Settings.TextColor, HotSpot.NoneId, "=") + context.Font.Width;
+			x = AddText(context, x, y, context.Settings.TextColor, HotSpot.NoneId, $"{{ {a:08X}-{b >> 16:04X}-{b & 0xFFFF:04X}-{c >> 16:04X}-{c & 0xFFFF:04X}{d:08X} }}") + context.Font.Width;
 
-			DrawInvalidMemoryIndicatorIcon(view, y);
-			AddContextDropDownIcon(view, y);
-			AddDeleteIcon(view, y);
+			x = AddComment(context, x, y);
 
-			return new Size(x - origX, view.Font.Height);
+			DrawInvalidMemoryIndicatorIcon(context, y);
+			AddContextDropDownIcon(context, y);
+			AddDeleteIcon(context, y);
+
+			return new Size(x - origX, context.Font.Height);
 		}
 
-		public override int CalculateDrawnHeight(ViewInfo view)
+		public override int CalculateDrawnHeight(DrawContext context)
 		{
-			return IsHidden ? HiddenHeight : view.Font.Height;
+			return IsHidden ? HiddenHeight : context.Font.Height;
 		}
 	}
 }
