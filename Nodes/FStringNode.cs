@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Text;
 using ReClassNET.Controls;
+using ReClassNET.Extensions;
 using ReClassNET.Nodes;
 using ReClassNET.UI;
 
@@ -26,7 +27,7 @@ namespace UnrealEngineClassesPlugin.Nodes
 
 			var ptr = context.Memory.ReadIntPtr(Offset);
 			var length = context.Memory.ReadInt32(Offset + IntPtr.Size);
-			var text = context.Process.ReadRemoteString(Encoding.Unicode, ptr, length);
+			var text = context.Process.ReadRemoteString(ptr, Encoding.Unicode, length);
 
 			var origX = x;
 
